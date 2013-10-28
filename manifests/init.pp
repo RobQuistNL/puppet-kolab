@@ -19,8 +19,8 @@ class kolab (
 #  include php  # TODO but dont have this one yet
   include apache
 
-  firewall::rule { 'kolab-apt-repo':
-    destination => 'mirror.kolabsys.com', 
+  firewall { 'kolab-apt-repo':
+    destination => '178.209.35.107', # mirror.kolabsys.com:80
     protocol    => tcp,
     port        => 80,
     direction   => 'output',
@@ -68,6 +68,5 @@ class kolab (
     template => 'kolab/apache2.conf.erb',
     require  => Package['kolabadmin'],
   }
-  
 
 }
