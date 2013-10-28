@@ -100,6 +100,5 @@ class kolab::dependencies (
     onlyif  => "test \"`dpkg -s smarty | grep 'Version' | cut -c 10-`\" != \"3.1.10\"",
     require => Package['php5', 'php5-cgi', 'php5-cli']
   }
-  
-  Package['apache2'] -> Apt::Pin ['kolab-pin']
+
 }
