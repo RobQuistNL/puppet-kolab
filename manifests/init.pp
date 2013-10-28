@@ -15,9 +15,12 @@ class kolab (
     $absent = false,
     $version = '3.0',
   ) inherits kolab::params {
+    
+#  include php  # TODO but dont have this one yet
+  include apache
 
   firewall::rule { 'kolab-apt-repo':
-    destination => '178.209.35.107', # mirror.kolabsys.com:80
+    destination => 'mirror.kolabsys.com', 
     protocol    => tcp,
     port        => 80,
     direction   => 'output',
@@ -27,14 +30,13 @@ class kolab (
   Service[ 'iptables' ] -> Exec['aptget_update']
 
   # Packages are temporarily unsigned
-  file { "/etc/apt/apt.conf.d/99auth": #since we can't really add --force-yes to the apt-get install.       
+  file { "/etc/apt/apt.conf.d/99auth":
     owner     => root,
     group     => root,
     content   => "APT::Get::AllowUnauthenticated yes;",
     mode      => 644,
     before    => Exec['aptget_update']
   }
-
 
   #Add repositories for Kolab
   apt::pin { 'kolab-pin':
@@ -48,7 +50,7 @@ class kolab (
     distro      => 'precise',
     repository  => 'release updates',
   }
-  
+
   package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light']:
     ensure => absent,
   }
@@ -57,16 +59,17 @@ class kolab (
              'php-kolab-freebusy', 'ldap-account-manager', 'kolab-cyrus-imapd',
              'kolab-cyrus-admin' ]:
     ensure  => installed,
-    require => [ Exec['aptget_update'], Package['exim4'], Package['exim4-base'],
+    require => [ Exec['aptget_update'], Class['apache'],
+                 Package['exim4'], Package['exim4-base'],
                  Package['exim4-config'], Package['exim4-daemon-light']]
   }
-
-
-  #exec {'setup-kolab': 
-  #  require => Package['kolab-webadmin']
-  #}
-
-#  File ['/etc/apt/apt.conf.d/99auth'] -> Package ['kolab']
-#  Package ['kolab-webadmin'] -> Exec ['rm /etc/apt/apt.conf.d/99auth']
+  
+  apache::vhost { 'kolab':
+    template => 'kolab/apache2.conf.erb',
+    require  => Package['kolabadmin'],
+  }
+  
+  
+  }
 
 }
