@@ -69,7 +69,5 @@ class kolab (
     require  => Package['kolabadmin'],
   }
   
-  
-  }
 
 }
