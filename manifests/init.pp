@@ -59,11 +59,11 @@ class kolab (
              'php-kolab-freebusy', 'ldap-account-manager', 'kolab-cyrus-imapd',
              'kolab-cyrus-admin' ]:
     ensure  => installed,
-    require => [ Exec['aptget_update'], Class['apache'],
+    require => [ Exec['aptget_update'], Package[$apache::package],
                  Package['exim4'], Package['exim4-base'],
                  Package['exim4-config'], Package['exim4-daemon-light']]
   }
-  
+
   apache::vhost { 'kolab':
     template => 'kolab/apache2.conf.erb',
     require  => Package['kolabadmin'],
