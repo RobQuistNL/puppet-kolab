@@ -1,4 +1,4 @@
 # Default class installation
 #
-class { 'standard42':
+class { 'kolab':
 }

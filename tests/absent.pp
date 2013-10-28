@@ -1,5 +1,5 @@
 # Class removal
 #
-class { 'standard42':
+class { 'kolab':
   absent => true,
 }
