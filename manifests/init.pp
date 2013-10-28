@@ -27,6 +27,11 @@ class kolab (
     mode      => 644;
   }
 
+  package { ['libmozldap-0d', 'mozldap-tools']:
+    ensure => installed,
+    require => File['/etc/apt/apt.conf.d/99auth'],
+  }
+
   package {'kolab':
     ensure => installed,
     require => Exec['smarty-3'],

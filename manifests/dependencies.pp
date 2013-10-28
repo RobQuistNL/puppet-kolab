@@ -1,10 +1,12 @@
 class kolab::dependencies (
   $version = '3.0',
 ) {
+  include php
+  include apache
 
   #Add repositories for Kolab
   apt::pin { 'kolab-pin':
-    priority        => 501,
+    priority        => 10,
     origin          => 'mirror.kolabsys.com',
     package         => 'kolab cyrus-imapd kolab-webadmin',
   }
@@ -31,8 +33,9 @@ class kolab::dependencies (
   }
   ->
   #Dependency for webadmin
-  package { ['cyrus-imapd', 'python-dateutil', 'libmozldap-0d', 'mozldap-tools', 'php5-cgi', 'php5-cli']:
+  package { ['cyrus-imapd', 'python-dateutil', 'php5-cgi', 'php5-cli']:
     ensure => installed,
+    require => Class['php'],
   }
   ->
   file {'/var/lib/imap': 

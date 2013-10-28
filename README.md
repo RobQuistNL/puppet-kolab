@@ -4,4 +4,10 @@ puppet-kolab
 Kolab module for Puppet
 
 DEPENDENCIES:
- * packages php5 & apache2 should be installed via puppet
+ * Puppet modules:
+ ** php
+ ** apache
+ * Packages should be installed via puppet (usually via the modules above):
+ ** php5
+ ** apache2
+ ** perl
