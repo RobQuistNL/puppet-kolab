@@ -14,16 +14,19 @@ class kolab (
     $disable = false,
     $absent = false,
     $version = '3.0',
+    $firewall = true
   ) inherits kolab::params {
     
 #  include php  # TODO but dont have this one yet
   include apache
 
-  firewall { 'kolab-apt-repo':
-    destination => '178.209.35.107', # mirror.kolabsys.com:80
-    protocol    => tcp,
-    port        => 80,
-    direction   => 'output',
+  if any2bool($firewall) {
+    firewall { 'kolab-apt-repo':
+      destination => '178.209.35.107', # mirror.kolabsys.com:80
+      protocol    => tcp,
+      port        => 80,
+      direction   => 'output',
+    }
   }
 
   include iptables
