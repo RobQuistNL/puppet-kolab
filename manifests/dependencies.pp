@@ -2,36 +2,7 @@ class kolab::dependencies (
   $version = $kolab::version,
 ) {
 
-  #Add repositories for Kolab
-  apt::pin { 'kolab-pin':
-    priority        => 501,
-    origin          => 'mirror.kolabsys.com',
-    package         => '*',
-  }
-
-  apt::repository { 'kolab':
-    url         => "http://mirror.kolabsys.com/pub/ubuntu/kolab-${version}/",
-    distro      => 'precise',
-    repository  => 'release updates',
-  }
   
-  package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light']:
-    ensure => absent,
-  }
-  
-  package { 'kolab':
-    ensure  => installed,
-    require => [ Exec['aptget_update'], Package['exim4'], Package['exim4-base'],
-                 Package['exim4-config'], Package['exim4-daemon-light']]
-  }
-
-
-
-
-
-
-
-
 
 #
 #  #Dependency for webadmin
