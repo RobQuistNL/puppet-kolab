@@ -22,9 +22,9 @@ class kolab (
 
   if any2bool($firewall) {
     firewall { 'kolab-apt-repo':
-      destination => '178.209.35.107', # mirror.kolabsys.com:80
+      destination => 'obs.kolabsys.com',
       protocol    => tcp,
-      port        => 80,
+      port        => 82,
       direction   => 'output',
     }
   }
@@ -32,44 +32,50 @@ class kolab (
   include iptables
   Service[ 'iptables' ] -> Exec['aptget_update']
 
-  # Packages are temporarily unsigned
-  file { "/etc/apt/apt.conf.d/99auth":
-    owner     => root,
-    group     => root,
-    content   => "APT::Get::AllowUnauthenticated yes;",
-    mode      => 644,
-    before    => Exec['aptget_update']
-  }
+#  # Packages are temporarily unsigned
+#  file { "/etc/apt/apt.conf.d/99auth":
+#    owner     => root,
+#    group     => root,
+#    content   => "APT::Get::AllowUnauthenticated yes;",
+#    mode      => 644,
+#    before    => Exec['aptget_update']
+#  }
 
   #Add repositories for Kolab
-  apt::pin { 'kolab-pin':
-    priority        => 501,
-    origin          => 'mirror.kolabsys.com',
-    package         => '*',
+#  apt::pin { 'kolab-pin':
+#    priority        => 501,
+#    origin          => 'mirror.kolabsys.com',
+#    package         => '*',
+#  }
+
+  apt::repository { 'kolab':
+    url         => "http://obs.kolabsys.com:82/Kolab:/3.1/Ubuntu_12.04/",
+    distro      => './',
+    repository  => '',
   }
 
   apt::repository { 'kolab':
-    url         => "http://mirror.kolabsys.com/pub/ubuntu/kolab-${version}/",
-    distro      => 'precise',
-    repository  => 'release updates',
+    url         => "http://obs.kolabsys.com:82/Kolab:/3.1:/Updates/Ubuntu_12.04/",
+    distro      => './',
+    repository  => '',
   }
 
   package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light']:
     ensure => absent,
   }
 
-  package { ['kolabd', 'kolabadmin', 'kolab-webadmin', 'php-kolab-filter',
-             'php-kolab-freebusy', 'ldap-account-manager', 'kolab-cyrus-imapd',
-             'kolab-cyrus-admin' ]:
-    ensure  => installed,
-    require => [ Exec['aptget_update'], Package[$apache::package],
-                 Package['exim4'], Package['exim4-base'],
-                 Package['exim4-config'], Package['exim4-daemon-light']]
-  }
-
-  apache::vhost { 'kolab':
-    template => 'kolab/apache2.conf.erb',
-    require  => Package['kolabadmin'],
-  }
+#  package { ['kolabd', 'kolabadmin', 'kolab-webadmin', 'php-kolab-filter',
+#             'php-kolab-freebusy', 'ldap-account-manager', 'kolab-cyrus-imapd',
+#             'kolab-cyrus-admin' ]:
+#    ensure  => installed,
+#    require => [ Exec['aptget_update'], Package[$apache::package],
+#                 Package['exim4'], Package['exim4-base'],
+#                 Package['exim4-config'], Package['exim4-daemon-light']]
+#  }
+#
+#  apache::vhost { 'kolab':
+#    template => 'kolab/apache2.conf.erb',
+#    require  => Package['kolabadmin'],
+#  }
 
 }
