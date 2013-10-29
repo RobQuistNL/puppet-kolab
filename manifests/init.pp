@@ -28,7 +28,6 @@ class kolab (
       port           => 80,
       direction      => 'output',
     }
-
   }
 
   include iptables
@@ -44,7 +43,11 @@ class kolab (
     before  => Package['kolab']
   }
 
-  # deb http://ftp.debian.org/debian wheezy main 
+  file { '/usr/local/bin/php5enmod':
+    ensure  => 'link',
+    target  => '/bin/true',
+    before  => Package['kolab']
+  }
 
   apt::repository { 'kolab-ubuntu':
     url        => 'http://mirror.kolabsys.com/pub/ubuntu/kolab-3.0/',
@@ -67,7 +70,7 @@ class kolab (
     ensure => absent,
     before => Package['kolab']
   }
-  
+
   package { 'kolab':
     ensure => '3.*'
   }
