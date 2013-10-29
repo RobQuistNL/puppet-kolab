@@ -22,88 +22,56 @@ class kolab (
 
   if any2bool($firewall) {
     firewall { 'kolab-apt-repo-smarty':
-      destination    => 'de.archive.ubuntu.com',
-      destination_v6 => 'de.archive.ubuntu.com',
+      destination    => 'mirror.kolabsys.com',
+      destination_v6 => 'mirror.kolabsys.com',
       protocol       => tcp,
       port           => 80,
       direction      => 'output',
     }
 
-    firewall { 'kolab-apt-repo':
-      destination    => 'obs.kolabsys.com',
-      destination_v6 => 'obs.kolabsys.com',
-      protocol       => tcp,
-      port           => 82,
-      direction      => 'output',
-    }
   }
 
   include iptables
   Service[ 'iptables' ] -> Exec['aptget_update']
 
-# Smarty3
-  apt::repository { 'smarty3':
-    url        => 'http://de.archive.ubuntu.com/ubuntu/',
-    distro     => 'raring',
-    repository => 'universe',
+  package { 'php5': }
+
+  # https://issues.kolab.org/show_bug.cgi?id=1763
+  file { '/etc/php5/modes-available':
+    ensure  => 'link',
+    target  => '/etc/php5/conf.d',
+    require => Package['php5'],
+    before  => Package['kolab']
   }
 
-  package { 'smarty3':
-#    before => Package['kolab']
+  # deb http://ftp.debian.org/debian wheezy main 
+
+  apt::repository { 'kolab-ubuntu':
+    url        => 'http://mirror.kolabsys.com/pub/ubuntu/kolab-3.0/',
+    distro     => 'precise',
+    repository => 'development',
   }
 
-  apt::pin { 'smarty3':
-    package => 'smarty3',
-    type    => 'release',
-    release => 'raring',
-    priority => 800,
-#    before  => Package['kolab'],
+  #  https://issues.kolab.org/show_bug.cgi?id=1922
+  apt::repository { 'kolab-debian':
+    url        => 'http://mirror.kolabsys.com/pub/ubuntu/kolab-3.0/',
+    distro     => 'wheezy',
+    repository => 'development',
   }
 
-# Kolab
-  apt::repository { 'kolab':
-    url         => "http://obs.kolabsys.com:82/Kolab:/3.1/Ubuntu_12.04/",
-    distro      => './',
-    repository  => '',
-  }
-
-  apt::repository { 'kolab-updates':
-    url         => "http://obs.kolabsys.com:82/Kolab:/3.1:/Updates/Ubuntu_12.04/",
-    distro      => './',
-    repository  => '',
-  }
-
-  package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light']:
+  package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light',
+             'manpages' #  manpages_3.44-1_all.deb (--unpack):  trying to overwrite 
+                        #'/usr/share/man/man1/getent.1.gz', which is also in package 
+                        # libc-bin 2.15-0ubuntu10.5
+  ]:
     ensure => absent,
+    before => Package['kolab']
   }
   
-#  # Packages are temporarily unsigned
-#  file { "/etc/apt/apt.conf.d/99auth":
-#    owner     => root,
-#    group     => root,
-#    content   => "APT::Get::AllowUnauthenticated yes;",
-#    mode      => 644,
-#    before    => Exec['aptget_update']
-#  }
+  package { 'kolab':
+    ensure => '3.*'
+  }
 
-  #Add repositories for Kolab
-#  apt::pin { 'kolab-pin':
-#    priority        => 501,
-#    origin          => 'mirror.kolabsys.com',
-#    package         => '*',
-#  }
-
-
-
-#  package { ['kolabd', 'kolabadmin', 'kolab-webadmin', 'php-kolab-filter',
-#             'php-kolab-freebusy', 'ldap-account-manager', 'kolab-cyrus-imapd',
-#             'kolab-cyrus-admin' ]:
-#    ensure  => installed,
-#    require => [ Exec['aptget_update'], Package[$apache::package],
-#                 Package['exim4'], Package['exim4-base'],
-#                 Package['exim4-config'], Package['exim4-daemon-light']]
-#  }
-#
 #  apache::vhost { 'kolab':
 #    template => 'kolab/apache2.conf.erb',
 #    require  => Package['kolabadmin'],
