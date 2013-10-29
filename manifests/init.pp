@@ -54,7 +54,7 @@ class kolab (
     repository  => '',
   }
 
-  apt::repository { 'kolab':
+  apt::repository { 'kolab-updates':
     url         => "http://obs.kolabsys.com:82/Kolab:/3.1:/Updates/Ubuntu_12.04/",
     distro      => './',
     repository  => '',
