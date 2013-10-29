@@ -36,7 +36,7 @@ class kolab (
   package { 'php5': }
 
   # https://issues.kolab.org/show_bug.cgi?id=1763
-  file { '/etc/php5/modes-available':
+  file { '/etc/php5/mods-available':
     ensure  => 'link',
     target  => '/etc/php5/conf.d',
     require => Package['php5'],
