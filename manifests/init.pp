@@ -49,7 +49,7 @@ class kolab (
   }
 
   package { 'smarty3':
-    before => Package['kolab']
+#    before => Package['kolab']
   }
 
   apt::pin { 'smarty3':
@@ -57,7 +57,7 @@ class kolab (
     type    => 'release',
     release => 'raring',
     priority => 800,
-    before  => Package['kolab'],
+#    before  => Package['kolab'],
   }
 
 # Kolab
