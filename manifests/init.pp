@@ -21,17 +21,62 @@ class kolab (
   include apache
 
   if any2bool($firewall) {
+    firewall { 'kolab-apt-repo-smarty':
+      destination    => 'de.archive.ubuntu.com',
+      destination_v6 => 'de.archive.ubuntu.com',
+      protocol       => tcp,
+      port           => 80,
+      direction      => 'output',
+    }
+
     firewall { 'kolab-apt-repo':
-      destination => 'obs.kolabsys.com',
-      protocol    => tcp,
-      port        => 82,
-      direction   => 'output',
+      destination    => 'obs.kolabsys.com',
+      destination_v6 => 'obs.kolabsys.com',
+      protocol       => tcp,
+      port           => 82,
+      direction      => 'output',
     }
   }
 
   include iptables
   Service[ 'iptables' ] -> Exec['aptget_update']
 
+# Smarty3
+  apt::repository { 'smarty3':
+    url        => 'http://de.archive.ubuntu.com/ubuntu/',
+    distro     => 'raring',
+    repository => 'universe',
+  }
+
+  package { 'smarty3':
+    before => Package['kolab']
+  }
+
+  apt::pin { 'smarty3':
+    package => 'smarty3',
+    type    => 'release',
+    release => 'raring',
+    priority => 800,
+    before  => Package['kolab'],
+  }
+
+# Kolab
+  apt::repository { 'kolab':
+    url         => "http://obs.kolabsys.com:82/Kolab:/3.1/Ubuntu_12.04/",
+    distro      => './',
+    repository  => '',
+  }
+
+  apt::repository { 'kolab-updates':
+    url         => "http://obs.kolabsys.com:82/Kolab:/3.1:/Updates/Ubuntu_12.04/",
+    distro      => './',
+    repository  => '',
+  }
+
+  package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light']:
+    ensure => absent,
+  }
+  
 #  # Packages are temporarily unsigned
 #  file { "/etc/apt/apt.conf.d/99auth":
 #    owner     => root,
@@ -48,21 +93,7 @@ class kolab (
 #    package         => '*',
 #  }
 
-  apt::repository { 'kolab':
-    url         => "http://obs.kolabsys.com:82/Kolab:/3.1/Ubuntu_12.04/",
-    distro      => './',
-    repository  => '',
-  }
 
-  apt::repository { 'kolab-updates':
-    url         => "http://obs.kolabsys.com:82/Kolab:/3.1:/Updates/Ubuntu_12.04/",
-    distro      => './',
-    repository  => '',
-  }
-
-  package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light']:
-    ensure => absent,
-  }
 
 #  package { ['kolabd', 'kolabadmin', 'kolab-webadmin', 'php-kolab-filter',
 #             'php-kolab-freebusy', 'ldap-account-manager', 'kolab-cyrus-imapd',
