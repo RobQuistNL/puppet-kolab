@@ -57,7 +57,7 @@ class kolab (
 
   #  https://issues.kolab.org/show_bug.cgi?id=1922
   apt::repository { 'kolab-debian':
-    url        => 'http://mirror.kolabsys.com/pub/ubuntu/kolab-3.0/',
+    url        => 'http://mirror.kolabsys.com/pub/debian/kolab-3.0/',
     distro     => 'wheezy',
     repository => 'development',
   }
@@ -72,6 +72,10 @@ class kolab (
   }
 
   package { 'kolab':
+    ensure => '3.*'
+  }
+  
+  package { 'kolab-webadmin':
     ensure => '3.*'
   }
 
