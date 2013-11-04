@@ -14,41 +14,74 @@ class kolab (
     $disable = false,
     $absent = false,
     $version = '3.0',
+    $firewall = true
   ) inherits kolab::params {
+    
+#  include php  # TODO but dont have this one yet
+  include apache
 
-  class {'kolab::dependencies': 
-    version => $version,
+  if any2bool($firewall) {
+    firewall { 'kolab-apt-repo-smarty':
+      destination    => 'mirror.kolabsys.com',
+      destination_v6 => 'mirror.kolabsys.com',
+      protocol       => tcp,
+      port           => 80,
+      direction      => 'output',
+    }
   }
 
-  file { "/etc/apt/apt.conf.d/99auth": #since we can't really add --force-yes to the apt-get install.       
-    owner     => root,
-    group     => root,
-    content   => "APT::Get::AllowUnauthenticated yes;",
-    mode      => 644;
+  include iptables
+  Service[ 'iptables' ] -> Exec['aptget_update']
+
+  package { 'php5': }
+
+  # https://issues.kolab.org/show_bug.cgi?id=1763
+  file { '/etc/php5/mods-available':
+    ensure  => 'link',
+    target  => '/etc/php5/conf.d',
+    require => Package['php5'],
+    before  => Package['kolab']
   }
 
-  package { ['libmozldap-0d', 'mozldap-tools']:
-    ensure => installed,
-    require => File['/etc/apt/apt.conf.d/99auth'],
+  file { '/usr/local/bin/php5enmod':
+    ensure  => 'link',
+    target  => '/bin/true',
+    before  => Package['kolab']
   }
 
-  package {'kolab':
-    ensure => installed,
-    require => Exec['smarty-3'],
+  apt::repository { 'kolab-ubuntu':
+    url        => 'http://mirror.kolabsys.com/pub/ubuntu/kolab-3.0/',
+    distro     => 'precise',
+    repository => 'development',
   }
 
-  package {'kolab-webadmin':
-    ensure => installed,
-    require => Package['kolab'],
+  #  https://issues.kolab.org/show_bug.cgi?id=1922
+  apt::repository { 'kolab-debian':
+    url        => 'http://mirror.kolabsys.com/pub/debian/kolab-3.0/',
+    distro     => 'wheezy',
+    repository => 'development',
   }
 
-  exec { "rm /etc/apt/apt.conf.d/99auth": } #Remove the ugly hack
+  package { ['exim4', 'exim4-base', 'exim4-config', 'exim4-daemon-light',
+             'manpages' #  manpages_3.44-1_all.deb (--unpack):  trying to overwrite 
+                        #'/usr/share/man/man1/getent.1.gz', which is also in package 
+                        # libc-bin 2.15-0ubuntu10.5
+  ]:
+    ensure => absent,
+    before => Package['kolab']
+  }
 
-  #exec {'setup-kolab': 
-  #  require => Package['kolab-webadmin']
-  #}
+  package { 'kolab':
+    ensure => '3.*'
+  }
+  
+  package { 'kolab-webadmin':
+    ensure => '3.*'
+  }
 
-  File ['/etc/apt/apt.conf.d/99auth'] -> Package ['kolab']
-  Package ['kolab-webadmin'] -> Exec ['rm /etc/apt/apt.conf.d/99auth']
+#  apache::vhost { 'kolab':
+#    template => 'kolab/apache2.conf.erb',
+#    require  => Package['kolabadmin'],
+#  }
 
 }
