@@ -14,33 +14,31 @@ class kolab (
     $disable = false,
     $absent = false,
     $version = '3.0',
-    $firewall = true
+    $firewall = true,
   ) inherits kolab::params {
     
 #  include php  # TODO but dont have this one yet
   include apache
 
-  if any2bool($firewall) {
-    firewall { 'kolab-apt-repo-smarty':
-      destination    => 'mirror.kolabsys.com',
-      destination_v6 => 'mirror.kolabsys.com',
-      protocol       => tcp,
-      port           => 80,
-      direction      => 'output',
+  if (any2bool($firewall)) {
+    firewall::rule { 'kolab-apt-repo':
+      destination => '178.209.35.107', # mirror.kolabsys.com:80
+      protocol    => tcp,
+      port        => 80,
+      direction   => 'output',
     }
+  
+    include iptables
+    Service[ 'iptables' ] -> Exec['aptget_update']
   }
 
-  include iptables
-  Service[ 'iptables' ] -> Exec['aptget_update']
-
-  package { 'php5': }
-
-  # https://issues.kolab.org/show_bug.cgi?id=1763
-  file { '/etc/php5/mods-available':
-    ensure  => 'link',
-    target  => '/etc/php5/conf.d',
-    require => Package['php5'],
-    before  => Package['kolab']
+  # Packages are temporarily unsigned
+  file { "/etc/apt/apt.conf.d/99auth": #since we can't really add --force-yes to the apt-get install.       
+    owner     => root,
+    group     => root,
+    content   => "APT::Get::AllowUnauthenticated yes;",
+    mode      => 644,
+    before    => Exec['aptget_update']
   }
 
   file { '/usr/local/bin/php5enmod':
