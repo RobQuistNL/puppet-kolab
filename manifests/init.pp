@@ -14,17 +14,20 @@ class kolab (
     $disable = false,
     $absent = false,
     $version = '3.0',
+    $firewall = true,
   ) inherits kolab::params {
 
-  firewall::rule { 'kolab-apt-repo':
-    destination => '178.209.35.107', # mirror.kolabsys.com:80
-    protocol    => tcp,
-    port        => 80,
-    direction   => 'output',
+  if (any2bool($firewall)) {
+    firewall::rule { 'kolab-apt-repo':
+      destination => '178.209.35.107', # mirror.kolabsys.com:80
+      protocol    => tcp,
+      port        => 80,
+      direction   => 'output',
+    }
+  
+    include iptables
+    Service[ 'iptables' ] -> Exec['aptget_update']
   }
-
-  include iptables
-  Service[ 'iptables' ] -> Exec['aptget_update']
 
   # Packages are temporarily unsigned
   file { "/etc/apt/apt.conf.d/99auth": #since we can't really add --force-yes to the apt-get install.       
